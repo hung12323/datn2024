@@ -2377,6 +2377,11 @@
   resolved "https://registry.yarnpkg.com/@react-native-firebase/messaging/-/messaging-18.7.2.tgz#e56c66077584f12ecd0eb814de5ed166148b9ee7"
   integrity sha512-0D6Rq8RY13+RhTm93AHJJvbZgTbWmuD4RcHJiv1uTIiee3urTsdn2nqH7aflaiT24i5XxantIzE9qUukOK9JbQ==
 
+"@react-native-google-signin/google-signin@^11.0.0":
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/@react-native-google-signin/google-signin/-/google-signin-11.0.0.tgz#b1732cf61758f8c6554adefd8cdc9a9f640df9b1"
+  integrity sha512-J8BFFGr5HcEWE2gRaVSJ0rQN8ztxYIr2wdWMG4PS1vhQZJqUzmRr6vpu12O1GppItq8ai7AA0rl/ja7hSytSXA==
+
 "@react-native/assets-registry@^0.72.0":
   version "0.72.0"
   resolved "https://registry.yarnpkg.com/@react-native/assets-registry/-/assets-registry-0.72.0.tgz#c82a76a1d86ec0c3907be76f7faf97a32bbed05d"
@@ -7337,6 +7342,11 @@ react-native-fast-image@^8.6.3:
   version "8.6.3"
   resolved "https://registry.yarnpkg.com/react-native-fast-image/-/react-native-fast-image-8.6.3.tgz#6edc3f9190092a909d636d93eecbcc54a8822255"
   integrity sha512-Sdw4ESidXCXOmQ9EcYguNY2swyoWmx53kym2zRsvi+VeFCHEdkO+WG1DK+6W81juot40bbfLNhkc63QnWtesNg==
+
+react-native-fbsdk-next@^12.1.2:
+  version "12.1.2"
+  resolved "https://registry.yarnpkg.com/react-native-fbsdk-next/-/react-native-fbsdk-next-12.1.2.tgz#46ddb91e22b6bda4a9097bdc78209b09878c111a"
+  integrity sha512-N5MgPwFLnLnC73HuvPLoG+KOjYJBnCFKpkbB3A8+AcKh5BrCcGFICtm3q8XXH1FUiQ8l+meQixz1ag1QoTEBig==
 
 react-native-gesture-handler@^2.12.0:
   version "2.13.1"

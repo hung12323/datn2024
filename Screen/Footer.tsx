@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 const Footer = () => {
   const navigation = useNavigation();
   const [image1Color, setImage1Color] = useState('gray');
@@ -37,23 +37,16 @@ const Footer = () => {
         onPress={() => changeImageColor(1)}
         style={styles.container1}>
         <Image
-          style={[styles.image1, {tintColor: image1Color}]}
+          style={[styles.image1, { tintColor: image1Color }]}
           source={require('../assets/19.png')}
         />
-        <Text style={styles.text}>24.5K</Text>
+        <Text style={styles.text}>23.5K</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Comment')}
-        style={styles.container}>
-        <Image style={[styles.image2]} source={require('../assets/20.png')} />
-        <Text style={styles.text}>5K</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity onPress={() => changeImageColor(3)}>
+
         <Image
           style={[styles.image3, {tintColor: image3Color}]}
-          source={require('../assets/21.png')}
+        source={require('../assets/21.png')}
         />
       </TouchableOpacity>
     </View>
@@ -84,6 +77,7 @@ const styles = StyleSheet.create({
   },
   image3: {
     marginRight: 8,
+    marginLeft:240
   },
   text: {
     fontWeight: 'bold',

@@ -10,9 +10,11 @@ import {
   Image,
 } from 'react-native';
 
+import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import auth from '@react-native-firebase/auth';
 import CheckBox from '@react-native-community/checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 const LoginScreen = ({navigation}) => {
   const [username, setUsername] = useState('');
   const [pass, setPass] = useState('');
@@ -25,7 +27,7 @@ const LoginScreen = ({navigation}) => {
     auth()
       .signInWithEmailAndPassword(email, password)
       .then(() => {
-        Alert.alert('Đăng nhập thành công ' + email, password);
+        Alert.alert('Đăng nhập thành công ');
         navigation.navigate('About');
       })
       .catch(err => {
@@ -79,6 +81,52 @@ const LoginScreen = ({navigation}) => {
 
     retrieveLoginInfo();
   }, []);
+  async function onFacebookButtonPress() {
+    // Attempt login with permissions
+    const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+  
+    if (result.isCancelled) {
+      throw 'User cancelled the login process';
+    }
+  
+    // Once signed in, get the users AccessToken
+    const data = await AccessToken.getCurrentAccessToken();
+  
+    if (!data) {
+      throw 'Something went wrong obtaining access token';
+    }
+  
+    // Create a Firebase credential with the AccessToken
+    const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+  
+    // Sign-in the user with the credential
+    return auth().signInWithCredential(facebookCredential);
+  }
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '425428980343-vcjgrk946irajihkct8htkr59d3idjfj.apps.googleusercontent.com',
+    });
+  },[])
+  async function onGoogleButtonPress() {
+    try {
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+      // Get the users ID token
+      const {idToken, user} = await GoogleSignin.signIn();
+  
+      console.log(user);
+      // Alert.alert('Success login');
+      navigation.navigate('About');
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+  
+      // Sign-in the user with the credential
+      return auth().signInWithCredential(googleCredential);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.container}>
@@ -147,7 +195,7 @@ const LoginScreen = ({navigation}) => {
         <Text style={styles.tex1}>or continue with</Text>
         <View style={styles.button3}>
           <View>
-            <TouchableOpacity style={styles.button1}>
+            <TouchableOpacity style={styles.button1} onPress={onFacebookButtonPress}>
               <Image
                 style={{marginRight: 10}}
                 source={require('../../assets/9.png')}
@@ -158,7 +206,7 @@ const LoginScreen = ({navigation}) => {
             </TouchableOpacity>
           </View>
           <View>
-            <TouchableOpacity style={styles.button2}>
+            <TouchableOpacity style={styles.button2} onPress={onGoogleButtonPress}>
               <Image
                 style={{marginRight: 10}}
                 source={require('../../assets/10.png')}

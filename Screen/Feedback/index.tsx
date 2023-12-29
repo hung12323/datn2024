@@ -9,8 +9,8 @@ import {
   ScrollView,
   Alert
 } from 'react-native';
+import firebase from '../UploadNews/firebase';
 import CheckBox from '@react-native-community/checkbox';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 const Feedback = () => {
   const [isChecked, setIsChecked] = useState(false);
@@ -39,31 +39,49 @@ const Feedback = () => {
     setEmail(text);
   };
 
-  const saveData = async () => {
+  const saveData = () => {
     try {
-      // Save data to AsyncStorage
-      await AsyncStorage.setItem('answer', answer);
-      await AsyncStorage.setItem('email', email);
+      // Lưu dữ liệu lên Firebase Realtime Database
+      firebase.database().ref('feedback').push({
+        answer: answer,
+        email: email,
+        isChecked: isChecked,
+        isChecked1: isChecked1,
+      });
       Alert.alert('Thông báo', 'Gửi thành công');
       navigation.navigate('About');
     } catch (error) {
       console.log('Error saving data:', error);
     }
   };
-
-  const loadData = async () => {
+  const clearData = () => {
+    setAnswer('');
+    setEmail('');
+    setIsChecked(false);
+    setIsChecked1(false);
+  };
+  const loadData = () => {
     try {
-      // Load data from AsyncStorage
-      const savedAnswer = await AsyncStorage.getItem('answer');
-      const savedEmail = await AsyncStorage.getItem('email');
-
-      if (savedAnswer !== null) {
-        setAnswer(savedAnswer);
-      }
-
-      if (savedEmail !== null) {
-        setEmail(savedEmail);
-      }
+      // Load dữ liệu từ Firebase Realtime Database
+      firebase
+        .database()
+        .ref('feedback')
+        .once('value', (snapshot) => {
+          const data = snapshot.val();
+          if (data !== null) {
+            const keys = Object.keys(data);
+            const lastKey = keys[keys.length - 1];
+            const savedAnswer = data[lastKey].answer;
+            const savedEmail = data[lastKey].email;
+            const savedIsChecked = data[lastKey].isChecked;
+            const savedIsChecked1 = data[lastKey].isChecked1;
+  
+            setAnswer(savedAnswer);
+            setEmail(savedEmail);
+            setIsChecked(savedIsChecked);
+            setIsChecked1(savedIsChecked1);
+          }
+        });
     } catch (error) {
       console.log('Error loading data:', error);
     }
@@ -163,7 +181,7 @@ const Feedback = () => {
               Gửi
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft: 150}}>
+          <TouchableOpacity style={{marginLeft: 150}} onPress={clearData}>
             <Text style={{fontWeight: 'bold', color: '#AF2655', fontSize: 18}}>
               Xóa hết câu trả lời
             </Text>

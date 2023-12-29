@@ -1,6 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "com.facebook.react"
-apply plugin: 'com.google.gms.google-services'
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -113,6 +113,8 @@ implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
         // implementation(platform("com.google.firebase:firebase-bom:32.5.0"))
         // implementation("com.google.firebase:firebase-analytics")
         //    implementation 'com.google.firebase:firebase-messaging'
+    implementation project(':react-native-fbsdk-next')
+ implementation 'com.facebook.android:facebook-android-sdk:[4,5)'
     }
 
     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
@@ -124,3 +126,5 @@ implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+apply plugin: 'com.google.gms.google-services'

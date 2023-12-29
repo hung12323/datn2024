@@ -23,6 +23,7 @@ const Detail1 = ({route}) => {
   const [comments, setComments] = useState([]);
   const navigation = useNavigation();
   const [searchKeyword] = useState('');
+  
   const submitComment = () => {
     // Gửi bình luận lên Realtime Database
     database()
@@ -140,7 +141,7 @@ const Detail1 = ({route}) => {
           }}>
           {title}
         </Text>
-        <Text style={{color: 'black', fontSize: 18, marginHorizontal: 12}}>
+        <Text style={{color: 'black', fontSize: 18, marginHorizontal: 12, textAlign: 'justify'}}>
           {content}
         </Text>
         <Text style={styles.timestamp}>

@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from 'react';
+import firebase from '../UploadNews/firebase';
+import { useNavigation } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,47 +11,62 @@ import {
   TextInput,
   StatusBar,
 } from 'react-native';
-import firebase from '../UploadNews/firebase';
-import React, {useEffect, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
-
 const Bookmark = () => {
-  const [newsData, setNewsData] = useState(null);
-  const navigation = useNavigation();
+  const [bookmarks, setBookmarks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [filteredBookmarks, setFilteredBookmarks] = useState([]);
   useEffect(() => {
-    const newsRef = firebase.database().ref('news');
-    newsRef.on('value', snapshot => {
+    const bookmarksRef = firebase.database().ref('bookmark');
+    bookmarksRef.on('value', snapshot => {
       const data = snapshot.val();
-      setNewsData(data);
+      if (data) {
+        const bookmarkedNews = Object.entries(data).map(([key, value]) => ({
+          key,
+          ...value,
+        }));
+        setBookmarks(bookmarkedNews);
+      } else {
+        setBookmarks([]);
+      }
     });
 
+    // Clean up: Hủy lắng nghe khi component bị unmount
     return () => {
-      newsRef.off();
+      bookmarksRef.off();
     };
   }, []);
-  const navigateToDetail = (title, content, image, time, image1) => {
-    navigation.navigate('Detail1', {title, content, image});
-  };
-  const filterNews = () => {
+  useEffect(() => {
+    setFilteredBookmarks(filterBookmarks());
+  }, [bookmarks, searchKeyword]);
+
+  const filterBookmarks = () => {
     if (!searchKeyword) {
-      return newsData;
+      return bookmarks;
     }
 
-    const filteredNews = Object.keys(newsData).filter(key => {
-      const title = newsData[key].title.toLowerCase();
+    const filteredBookmarks = bookmarks.filter(bookmark => {
+      const title = bookmark.title.toLowerCase();
       return title.includes(searchKeyword.toLowerCase());
     });
 
-    return filteredNews.reduce((filteredData, key) => {
-      filteredData[key] = newsData[key];
-      return filteredData;
-    }, {});
+    return filteredBookmarks;
   };
+  const navigation = useNavigation();
+
+  const navigateToDetail = (title, content, image, image1, time) => {
+    navigation.navigate('Detail1', { title, content, image });
+  };
+
+  const handleRemoveBookmark = (bookmarkKey) => {
+    const bookmarksRef = firebase.database().ref('bookmark');
+    bookmarksRef.child(bookmarkKey).remove();
+  };
+
   return (
+
     <View style={styles.container}>
       <StatusBar backgroundColor="gray" />
-      <View style={{marginTop: 70}}>
+      <View style={{ marginTop: 40, marginLeft: -20 }}>
         <Text
           style={{
             fontSize: 25,
@@ -62,64 +80,66 @@ const Bookmark = () => {
       <View style={styles.search}>
         <TouchableOpacity>
           <Image
-            style={{marginLeft: 5}}
+            style={{ marginLeft: 5 }}
             source={require('../../assets/4.png')}
           />
         </TouchableOpacity>
         <TextInput
-          style={{marginLeft: 10}}
+          style={{ marginLeft: 10 }}
           placeholder="Search"
           value={searchKeyword}
           onChangeText={text => setSearchKeyword(text)}
         />
       </View>
-
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        {newsData && (
-          <View>
-            {Object.keys(filterNews()).map(key => (
-              <TouchableOpacity
-                key={key}
-                onPress={() =>
-                  navigateToDetail(
-                    newsData[key].title,
-                    newsData[key].content,
-                    newsData[key].image,
-                    newsData[key].time,
-                    newsData[key].image1,
-                  )
-                }>
-                <View style={styles.list}>
+      <ScrollView>
+        {/* {filteredBookmarks.length > 0 ? (
+          filteredBookmarks.map((bookmark, index) => ( */}
+       {filteredBookmarks.length > 0 ? (
+          filteredBookmarks.map((bookmark, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() =>
+                navigateToDetail(bookmark.title, bookmark.content, bookmark.image, bookmark.image1, bookmark.time)
+              }>
+              <View style={styles.list}>
+                {bookmark.image && (
                   <Image
-                    source={{uri: newsData[key].image}}
+                    source={{ uri: bookmark.image }}
                     style={styles.image}
                   />
-                  <View style={styles.rightItem}>
-                    <Text style={styles.title} numberOfLines={2}>
-                      {newsData[key].title}
+                )}
+                <View style={styles.rightItem}>
+                  <Text style={styles.title} numberOfLines={2}>{bookmark.title} </Text>
+                  <Text style={styles.description} numberOfLines={5}>{bookmark.content}</Text>
+                  <View style={{
+                    flexDirection: 'row',
+                    marginTop: -70,
+                    marginBottom: -40,
+                  }}>
+                    <Image
+                      source={{ uri: bookmark.image1 }}
+                      style={{ height: 20, width: 80, marginTop: -5 }}
+                    />
+                    <Text style={styles.description1}>
+                      {bookmark.time}
                     </Text>
-                    <Text style={styles.description} numberOfLines={5}>
-                      {newsData[key].content}
-                    </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        marginTop: -70,
-                        marginBottom: -40,
-                      }}>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveBookmark(bookmark.key)}>
                       <Image
-                        source={{uri: newsData[key].image1}}
-                        style={{height: 20, width: 80, marginTop: -5}}
+                        style={styles.image3}
+                        source={require('../../assets/21.png')}
                       />
-                      <Text style={styles.description1}>
-                        {newsData[key].time}
-                      </Text>
-                    </View>
+                    </TouchableOpacity>
                   </View>
                 </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+
+              </View>
+
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text>No bookmarks found.</Text>
         )}
       </ScrollView>
     </View>
@@ -129,12 +149,34 @@ const Bookmark = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  articleContainer: {
-    marginBottom: 1,
-    // backgroundColor: 'white',
+    backgroundColor: 'white',
+    padding: 20,
   },
 
+  image: {
+    width: 180,
+    height: 150,
+    marginHorizontal: 17,
+    marginVertical: 15,
+    // marginRight:10
+    marginLeft: 1
+  },
+  rightItem: {
+    marginTop: 10,
+    flexDirection: 'column',
+    marginHorizontal: 1,
+    flex: 1,
+    marginBottom: -20,
+  },
+  image3: {
+    marginLeft: 20
+  },
+  description1: {
+    marginBottom: 80,
+    marginTop: -3,
+    color: 'gray',
+    marginLeft: 10,
+  },
   title: {
     flex: 1,
     fontSize: 17,
@@ -144,41 +186,16 @@ const styles = StyleSheet.create({
     marginTop: 1,
     marginBottom: 5,
   },
-  contentContainer: {
-    flexGrow: 1,
-  },
-  rightItem: {
-    marginTop: 10,
-    flexDirection: 'column',
-    marginHorizontal: 1,
-    flex: 1,
-    marginBottom: -20,
-  },
-  list: {
-    flexDirection: 'row',
-    // marginTop: -40
-  },
   description: {
     marginBottom: 80,
     color: 'black',
   },
-  description1: {
-    marginBottom: 80,
-    marginTop: -3,
-    color: 'gray',
-    marginLeft: 10,
+  removeButton: {
+
   },
-  image: {
-    width: 180,
-    height: 150,
-    marginHorizontal: 17,
-    marginVertical: 15,
-  },
-  image1: {
-    width: '88%',
-    height: 150,
-    marginHorizontal: 17,
-    marginVertical: 15,
+  removeButtonText: {
+    color: 'black',
+
   },
   search: {
     flexDirection: 'row',
@@ -190,36 +207,12 @@ const styles = StyleSheet.create({
     width: 350,
     marginTop: 20,
     marginHorizontal: 'auto',
-    marginLeft: 20,
+    marginLeft: 1,
+    marginBottom: 10
   },
-  Trending: {
+  list: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  head: {
-    flexDirection: 'row',
-    marginVertical: 10,
-    alignItems: 'center',
-  },
-  anh1: {
-    marginLeft: 30,
-    marginTop: 50,
-  },
-  anh2: {
-    marginLeft: 210,
-    marginTop: 60,
-  },
-  text1: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  text2: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
+    // marginTop: -40
   },
 });
 
