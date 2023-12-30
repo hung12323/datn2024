@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -12,9 +12,11 @@ import {
 import CheckBox from '@react-native-community/checkbox';
 import auth from '@react-native-firebase/auth';
 
-const SignUp = ({navigation}) => {
+const SignUp = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const sigUpTestFn = () => {
     auth()
       .createUserWithEmailAndPassword(email, password)
@@ -29,7 +31,7 @@ const SignUp = ({navigation}) => {
 
   const [isChecked, setIsChecked] = useState(false);
   const handleCheckboxChange = () => {
-    setIsChecked(!isChecked);
+    setRememberMe(!rememberMe);
   };
   return (
     <SafeAreaView style={styles.root}>
@@ -45,37 +47,40 @@ const SignUp = ({navigation}) => {
           }}>
           Signup to get Started
         </Text>
-        <Text style={{marginTop: 50, marginLeft: 20}}>Username*</Text>
+        <Text style={{ marginTop: 50, marginLeft: 20 }}>Username*</Text>
         <TextInput
           style={styles.input}
           value={email}
           onChangeText={text => setEmail(text)}
           placeholder="Tên đăng nhập"
         />
-        <Text style={{marginLeft: 20}}>Mật khẩu*</Text>
+        <Text style={{ marginLeft: 20 }}>Mật khẩu*</Text>
         <View style={styles.passwordContainer}>
           <TextInput
+            placeholder="Mật khẩu"
             value={password}
             onChangeText={text => setPassword(text)}
-            placeholder="Mật khẩu"
-            secureTextEntry
+            secureTextEntry={!showPassword}
           />
-          <Image
-            style={styles.passwordIcon}
-            source={require('../../assets/8.png')}
-          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+
+            <Image
+              style={[styles.icon, { marginLeft: 250 }]}
+              source={showPassword ? require('../../assets/8_hide.png') : require('../../assets/8.png')}
+            />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.checkboxContainer}>
           <CheckBox
-            value={isChecked}
+            value={rememberMe}
             onValueChange={handleCheckboxChange}
-            tintColors={{true: '#1877F2', false: 'gray'}}
+            tintColors={{ true: '#1877F2', false: 'gray' }}
             boxType="circle"
             lineWidth={1}
           />
           <Text style={styles.label}>Remember me </Text>
-          <Text style={{color: '#1877F2', marginLeft: 100}}>
+          <Text style={{ color: '#1877F2', marginLeft: 100 }}>
             Forgot the password ?
           </Text>
         </View>
@@ -240,4 +245,8 @@ const styles = StyleSheet.create({
     marginLeft: 2,
     color: 'black',
   },
+  icon: {
+    height: 25,
+    width: 30
+  }
 });

@@ -49,8 +49,8 @@ const Detail1 = ({route}) => {
     // Tăng số lượng lượt thích của bình luận lên 1
     database()
       .ref(`comments/${commentId}/likes`)
-      // .transaction(likes => (likes || 1) + 1)
-      .transaction(likes => likes || 1)
+      .transaction(likes => (likes || 1) + 1)
+      // .transaction(likes => likes || 1)
       .then(() => {
         console.log('Đã thích bình luận thành công.');
       })

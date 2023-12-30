@@ -8,7 +8,6 @@ import LoginScreen from './LoginScreen';
 // import Signup from './Signup';
 import SignUp from './SignUp';
 import Explore from './Explore';
-import NewsDetail from './NewsDetail';
 import AppProvider from './AppContext';
 // import HomePage from './HomePage';
 import HomePage from './HomePage/About';
@@ -114,7 +113,6 @@ export function Index() {
           <Stack.Screen name="SignUp" component={SignUp} />
           {/* <Stack.Screen name="About" component={About} /> */}
           <Stack.Screen name="HomePage" component={HomePage} />
-          <Stack.Screen name="NewsDetail" component={NewsDetail} />
           <Stack.Screen name="Profile" component={Profile} />
           <Stack.Screen name="Trending" component={Trending} />
           <Stack.Screen name="Head" component={Head} />
