@@ -87,12 +87,13 @@ const Profile = ({ navigation }) => {
       <View style={styles.lan}>
         <TouchableOpacity
           style={{ flexDirection: 'row' }}
-          onPress={() => navigation.navigate('UploadNews')}>
+          // onPress={() => navigation.navigate('UploadNews')}
+          >
           <Image
             style={{ height: 30, width: 30 }}
-            source={require('../../assets/upload-solid.png')}
+            source={require('../../assets/51.png')}
           />
-          <Text style={styles.text1}>Upload News</Text>
+          <Text style={styles.text1}>Notification</Text>
         </TouchableOpacity>
       </View>
 

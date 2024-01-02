@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,25 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Button
 } from 'react-native';
 import database from '@react-native-firebase/database';
 import moment from 'moment';
 import Head from './Head';
 import Footer from './Footer';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import firebase from './UploadNews/firebase';
 
-const Detail1 = ({route}) => {
+const Detail1 = ({ route }) => {
   const [newsData, setNewsData] = useState(null);
-  const {title, content, image, timestamp} = route.params;
+  const { title, content, image, timestamp } = route.params;
   const [comment, setComment] = useState('');
   const [username, setUsername] = useState('');
   const [comments, setComments] = useState([]);
+  const [likedComments, setLikedComments] = useState([]);
   const navigation = useNavigation();
   const [searchKeyword] = useState('');
-  
+
   const submitComment = () => {
     // Gửi bình luận lên Realtime Database
     database()
@@ -34,6 +36,7 @@ const Detail1 = ({route}) => {
         content: comment,
         username: username,
         likes: 0,
+        likedBy: [],
       })
       .then(() => {
         console.log('Bình luận đã được lưu thành công vào Firebase.');
@@ -45,18 +48,60 @@ const Detail1 = ({route}) => {
       });
   };
 
+  useEffect(() => {
+    const commentsRef = database().ref('comments');
+    commentsRef.on('value', snapshot => {
+      const commentsData = snapshot.val();
+      if (commentsData) {
+        const commentsList = Object.entries(commentsData).map(([key, value]) => ({
+          id: key,
+          ...value,
+        }));
+        const filteredComments = commentsList.filter(comment => comment.title === title);
+        setComments(filteredComments);
+
+        // Cập nhật danh sách các bình luận đã được người dùng hiện tại like
+        const likedCommentsByUser = filteredComments.filter(comment => comment.likedBy && comment.likedBy.includes(username));
+        setLikedComments(likedCommentsByUser.map(comment => comment.id));
+      } else {
+        setComments([]);
+        setLikedComments([]);
+      }
+    });
+
+    return () => commentsRef.off('value');
+  }, [title, username]);
+  let updatedLikedComments;
+
   const likeComment = commentId => {
-    // Tăng số lượng lượt thích của bình luận lên 1
+    // Kiểm tra xem người dùng đã like bình luận hay chưa
+    const isLiked = likedComments.includes(commentId);
+
+    let updatedLikedComments;
+
+    if (isLiked) {
+      // Bỏ like nếu đã like trước đó
+      updatedLikedComments = likedComments.filter(id => id !== commentId);
+    } else {
+      // Like nếu chưa like trước đó
+      updatedLikedComments = [...likedComments, commentId];
+    }
+
     database()
-      .ref(`comments/${commentId}/likes`)
-      .transaction(likes => (likes || 1) + 1)
-      // .transaction(likes => likes || 1)
+      .ref(`comments/${commentId}/likedBy`)
+      .set(updatedLikedComments)
       .then(() => {
-        console.log('Đã thích bình luận thành công.');
+        console.log(isLiked ? 'Đã bỏ like bình luận thành công.' : 'Đã thích bình luận thành công.');
+        updateLikedCommentsState(updatedLikedComments); // Gọi hàm để cập nhật giá trị mới của likedComments
       })
       .catch(error => {
-        console.log('Lỗi khi thích bình luận:', error);
+        console.log(isLiked ? 'Lỗi khi bỏ like bình luận:' : 'Lỗi khi thích bình luận:', error);
       });
+  };
+
+  const updateLikedCommentsState = newLikedComments => {
+    // Cập nhật giá trị mới của likedComments
+    setLikedComments(newLikedComments);
   };
   useEffect(() => {
     const newsRef = firebase.database().ref('news2');
@@ -72,7 +117,7 @@ const Detail1 = ({route}) => {
   }, []);
   const navigateToDetail = (title, content, image, time, image1) => {
     // Chuyển đến màn hình chi tiết và truyền dữ liệu tin tức
-    navigation.navigate('Detail1', {title, content, image});
+    navigation.navigate('Detail1', { title, content, image });
   };
   const filterNews = () => {
     if (!searchKeyword) {
@@ -89,32 +134,32 @@ const Detail1 = ({route}) => {
       return filteredData;
     }, {});
   };
-  useEffect(() => {
-    const commentsRef = database().ref('comments');
-    commentsRef.on('value', snapshot => {
-      const commentsData = snapshot.val();
-      if (commentsData) {
-        const commentsList = Object.entries(commentsData).map(
-          ([key, value]) => ({
-            id: key,
-            ...value,
-          }),
-        );
-        const filteredComments = commentsList.filter(
-          comment => comment.title === title,
-        );
-        setComments(filteredComments);
-      } else {
-        setComments([]);
-      }
-    });
+  const [reply, setReply] = useState('');
+const [replyingCommentId, setReplyingCommentId] = useState(null);
+const [replyingUsername, setReplyingUsername] = useState('');
 
-    return () => commentsRef.off('value');
-  }, [title]);
+const submitReply = (commentId, reply, username) => {
+  database()
+    .ref(`comments/${commentId}/replies`)
+    .push()
+    .set({
+      content: reply,
+      username: username,
+    })
+    .then(() => {
+      console.log('Reply saved successfully to Firebase.');
+      setReply('');
+      setReplyingCommentId(null); // Thêm dòng này để ẩn các comment reply
+      setReplyingUsername('');
+    })
+    .catch(error => {
+      console.log('Error saving reply to Firebase:', error);
+    });
+};
 
   return (
     <View style={styles.container}>
-      <View style={{flexDirection: 'row'}}>
+      <View style={{ flexDirection: 'row' }}>
         <Head />
         <Text
           style={{
@@ -129,7 +174,7 @@ const Detail1 = ({route}) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Image source={{uri: image}} style={{width: '100%', height: 200}} />
+        <Image source={{ uri: image }} style={{ width: '100%', height: 200 }} />
 
         <Text
           style={{
@@ -141,14 +186,14 @@ const Detail1 = ({route}) => {
           }}>
           {title}
         </Text>
-        <Text style={{color: 'black', fontSize: 18, marginHorizontal: 12, textAlign: 'justify'}}>
+        <Text style={{ color: 'black', fontSize: 18, marginHorizontal: 12, textAlign: 'justify' }}>
           {content}
         </Text>
         <Text style={styles.timestamp}>
           {moment(timestamp).format('MMMM Do YYYY, h:mm:ss a')}
         </Text>
         <View>
-          <Text style={{marginTop: 20}}>
+          <Text style={{ marginTop: 20 }}>
             --------------------------------------------------------------------------------------------------
           </Text>
           <Text
@@ -163,7 +208,7 @@ const Detail1 = ({route}) => {
         </View>
         {comments.map((comment, index) => (
           <View key={index} style={styles.commentContainer}>
-            <View style={{flexDirection: 'row'}}>
+            <View style={{ flexDirection: 'row' }}>
               <Image
                 style={styles.image}
                 source={require('../assets/Profile.png')}
@@ -175,8 +220,62 @@ const Detail1 = ({route}) => {
             <TouchableOpacity
               style={styles.likeButton}
               onPress={() => likeComment(comment.id)}>
-              <Text style={styles.likeButtonText}>Like ({comment.likes})</Text>
+              <Text style={styles.likeButtonText}>
+                {comment.likedBy && comment.likedBy.length > 0 ? 'Unlike' : 'Like'} ({comment.likedBy ? comment.likedBy.length : 0})
+              </Text>
             </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+  if (replyingCommentId === comment.id) {
+    setReplyingCommentId(null);
+  } else {
+    setReplyingCommentId(comment.id);
+  }
+}}>
+  <Text>Reply</Text>
+</TouchableOpacity>
+
+{/* Hiển thị danh sách các comment reply */}
+{comment.replies && Object.values(comment.replies).map((reply, index) => (
+  <View style={{flexDirection:'row',marginTop: 10,marginLeft:20}} key={index}>
+    {replyingCommentId === comment.id ? (
+      <>
+        <Image
+          style={styles.image}
+          source={require('../assets/24.png')}
+        />
+        <Text style={styles.commentText1}>{reply.username}</Text>
+      </>
+    ) : null}
+    {replyingCommentId === comment.id && (
+      <Text style={styles.commentText}>{reply.content}</Text>
+    )}
+  </View>
+))}
+
+{
+  replyingCommentId === comment.id && (
+    <View>
+      <TextInput
+        style={styles.commentInput}
+        value={replyingUsername}
+        onChangeText={setReplyingUsername}
+        placeholder="Your name"
+      />
+      <TextInput
+        style={styles.commentInput}
+        value={reply}
+        onChangeText={setReply}
+        placeholder="Enter your reply"
+      />
+      <TouchableOpacity style={styles.submitButton} onPress={() => {
+        submitReply(comment.id, reply, replyingUsername);
+        setReplyingCommentId(null);
+      }}>
+        <Text>Submit Reply</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
           </View>
         ))}
         <TextInput
@@ -231,7 +330,7 @@ const Detail1 = ({route}) => {
                         </Text>
                       </View>
                       <Image
-                        source={{uri: newsData[key].image}}
+                        source={{ uri: newsData[key].image }}
                         style={styles.image1}
                       />
 
@@ -242,8 +341,8 @@ const Detail1 = ({route}) => {
                           marginBottom: -10,
                         }}>
                         <Image
-                          source={{uri: newsData[key].image1}}
-                          style={{height: 20, width: 80, marginTop: -2}}
+                          source={{ uri: newsData[key].image1 }}
+                          style={{ height: 20, width: 80, marginTop: -2 }}
                         />
 
                         <Text>{newsData[key].time}</Text>
@@ -269,12 +368,12 @@ const Detail1 = ({route}) => {
                 }}
                 onPress={() => navigation.navigate('Feedback')}>
                 <Text
-                  style={{fontWeight: 'bold', color: '#AF2655', fontSize: 23}}>
+                  style={{ fontWeight: 'bold', color: '#AF2655', fontSize: 23 }}>
                   Phản hồi với App News
                 </Text>
               </TouchableOpacity>
             </View>
-            <Text style={{marginTop: 15}}>
+            <Text style={{ marginTop: 15 }}>
               -------------------------------------------------------------------------------------------------
             </Text>
             <Text
@@ -287,16 +386,16 @@ const Detail1 = ({route}) => {
               }}>
               Báo điện tử App News
             </Text>
-            <Text style={{marginLeft: 20, color: 'black', fontSize: 18}}>
+            <Text style={{ marginLeft: 20, color: 'black', fontSize: 18 }}>
               Báo tiếng Việt nhiều người xem nhất
             </Text>
-            <Text style={{marginTop: 15}}>
+            <Text style={{ marginTop: 15 }}>
               -------------------------------------------------------------------------------------------------
             </Text>
-            <Text style={{marginLeft: 20, color: 'black', fontSize: 18}}>
+            <Text style={{ marginLeft: 20, color: 'black', fontSize: 18 }}>
               Thuộc Bộ Khoa học và Công Nghệ
             </Text>
-            <Text style={{marginLeft: 20, color: 'black', fontSize: 18}}>
+            <Text style={{ marginLeft: 20, color: 'black', fontSize: 18 }}>
               Số giấy phép:890/TVH-BTTTT ngày 12/5/2023
             </Text>
             <Text
@@ -308,10 +407,10 @@ const Detail1 = ({route}) => {
               }}>
               Tổng biên tập:Trương Văn Hưng
             </Text>
-            <Text style={{marginLeft: 20, color: 'black', fontSize: 18}}>
+            <Text style={{ marginLeft: 20, color: 'black', fontSize: 18 }}>
               Địa chỉ:Tầng 10,Tòa A Phạm Văn ĐỒNG ,Cầu Giấy ,Hà Nội
             </Text>
-            <Text style={{marginLeft: 20, color: 'black', fontSize: 18}}>
+            <Text style={{ marginLeft: 20, color: 'black', fontSize: 18 }}>
               Điện Thoại :0338268517
             </Text>
             <Text
@@ -326,7 +425,7 @@ const Detail1 = ({route}) => {
           </ScrollView>
         </View>
       </ScrollView>
-      <View style={{marginLeft: 20}}>
+      <View style={{ marginLeft: 20 }}>
         <Footer />
       </View>
     </View>
@@ -421,6 +520,7 @@ const styles = StyleSheet.create({
   },
   likeButton: {
     marginTop: 5,
+   
   },
   likeButtonText: {
     color: 'blue',
