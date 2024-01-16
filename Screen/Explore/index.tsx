@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  RefreshControl
 } from 'react-native';
 import firebase from '../UploadNews/firebase';
 import {useNavigation} from '@react-navigation/native';
@@ -16,6 +17,8 @@ const Latest: React.FC = () => {
   const [searchKeyword] = useState('');
   const [image1Color, setImage1Color] = useState('gray');
   const [image3Color, setImage3Color] = useState('gray');
+  const newsRef = firebase.database().ref('news');
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     const newsRef = firebase.database().ref('news');
     newsRef.on('value', snapshot => {
@@ -137,6 +140,19 @@ const Latest: React.FC = () => {
         break;
     }
   };
+  const onRefresh = async () => {
+    setRefreshing(true); // Bắt đầu refresh
+
+    try {
+      const snapshot = await newsRef.once('value');
+      const data = snapshot.val();
+      setNewsData(data);
+    } catch (error) {
+      console.log('Error fetching news data:', error);
+    }
+
+    setRefreshing(false); // Kết thúc refresh
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.text1}>Explore</Text>
@@ -169,7 +185,7 @@ const Latest: React.FC = () => {
       <View style={styles.button1}>
         <Image style={styles.anh} source={require('../../assets/17.png')} />
         <View>
-          <Text style={styles.text2}>World</Text>
+          <Text style={styles.text2}>Politics</Text>
           <Text style={styles.text3}>
             The application of scientific {'\n'}
             knowledge to the practi...
@@ -186,7 +202,7 @@ const Latest: React.FC = () => {
       <View style={styles.button1}>
         <Image style={styles.anh} source={require('../../assets/16.png')} />
         <View>
-          <Text style={styles.text2}>Art</Text>
+          <Text style={styles.text2}>Bussiness</Text>
           <Text style={styles.text3}>
             Art is a diverse range of {'\n'}
             human activity, and result...
@@ -201,10 +217,12 @@ const Latest: React.FC = () => {
         </TouchableOpacity>
       </View>
       <Text style={styles.text4}>Popular Topic</Text>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
+        } contentContainerStyle={styles.contentContainer}>
         {newsData && (
           <View>
-            {Object.keys(filterNews()).map(key => (
+            {Object.keys(filterNews()).reverse().map(key => (
               <TouchableOpacity
                 key={key}
                 onPress={() =>

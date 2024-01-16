@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import auth from '@react-native-firebase/auth';
-
+import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 const SignUp = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +34,52 @@ const SignUp = ({ navigation }) => {
   const handleCheckboxChange = () => {
     setRememberMe(!rememberMe);
   };
+  async function onFacebookButtonPress() {
+    // Attempt login with permissions
+    const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+
+    if (result.isCancelled) {
+      throw 'User cancelled the login process';
+    }
+
+    // Once signed in, get the users AccessToken
+    const data = await AccessToken.getCurrentAccessToken();
+
+    if (!data) {
+      throw 'Something went wrong obtaining access token';
+    }
+
+    // Create a Firebase credential with the AccessToken
+    const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+
+    // Sign-in the user with the credential
+    return auth().signInWithCredential(facebookCredential);
+  }
+
+  async function onGoogleButtonPress() {
+    try {
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      // Get the users ID token
+      const { idToken, user } = await GoogleSignin.signIn();
+
+      console.log(user);
+      // Alert.alert('Success login');
+      navigation.navigate('About');
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign-in the user with the credential
+      return auth().signInWithCredential(googleCredential);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '425428980343-vcjgrk946irajihkct8htkr59d3idjfj.apps.googleusercontent.com',
+    });
+  }, [])
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.container}>
@@ -93,21 +140,26 @@ const SignUp = ({ navigation }) => {
         <Text style={styles.orText}>or continue with</Text>
 
         <View style={styles.socialButtonContainer}>
-          <View style={styles.socialButton}>
-            <Image
-              style={styles.socialIcon}
-              source={require('../../assets/9.png')}
-            />
-            <Text style={styles.socialButtonText}>Facebook</Text>
-          </View>
+          <TouchableOpacity onPress={onFacebookButtonPress}>
+            <View style={styles.socialButton}>
+              <Image
+                style={styles.socialIcon}
+                source={require('../../assets/9.png')}
+              />
+              <Text style={styles.socialButtonText}>Facebook</Text>
+            </View>
+          </TouchableOpacity>
 
-          <View style={styles.socialButton}>
-            <Image
-              style={styles.socialIcon}
-              source={require('../../assets/10.png')}
-            />
-            <Text style={styles.socialButtonText}>Google</Text>
-          </View>
+          <TouchableOpacity onPress={onGoogleButtonPress}>
+            <View style={styles.socialButton}>
+              <Image
+                style={styles.socialIcon}
+                source={require('../../assets/10.png')}
+              />
+              <Text style={styles.socialButtonText}>Google</Text>
+            </View>
+          </TouchableOpacity>
+
         </View>
       </View>
 

@@ -71,7 +71,6 @@ const Detail1 = ({ route }) => {
 
     return () => commentsRef.off('value');
   }, [title, username]);
-  let updatedLikedComments;
 
   const likeComment = commentId => {
     // Kiểm tra xem người dùng đã like bình luận hay chưa
@@ -156,7 +155,18 @@ const submitReply = (commentId, reply, username) => {
       console.log('Error saving reply to Firebase:', error);
     });
 };
-
+const deleteComment = (commentId) => {
+  // Xóa comment khỏi Realtime Database
+  database()
+    .ref(`comments/${commentId}`)
+    .remove()
+    .then(() => {
+      console.log('Xóa comment thành công.');
+    })
+    .catch(error => {
+      console.log('Lỗi khi xóa comment:', error);
+    });
+};
   return (
     <View style={styles.container}>
       <View style={{ flexDirection: 'row' }}>
@@ -207,23 +217,35 @@ const submitReply = (commentId, reply, username) => {
           </Text>
         </View>
         {comments.map((comment, index) => (
-          <View key={index} style={styles.commentContainer}>
-            <View style={{ flexDirection: 'row' }}>
-              <Image
-                style={styles.image}
-                source={require('../assets/Profile.png')}
-              />
-              <Text style={styles.commentText1}>{comment.username}</Text>
-              <Text style={styles.commentText}>{comment.content}</Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.likeButton}
-              onPress={() => likeComment(comment.id)}>
-              <Text style={styles.likeButtonText}>
-                {comment.likedBy && comment.likedBy.length > 0 ? 'Unlike' : 'Like'} ({comment.likedBy ? comment.likedBy.length : 0})
-              </Text>
-            </TouchableOpacity>
+  <View key={index} style={styles.commentContainer}>
+    <View style={{ flexDirection: 'row' }}>
+      <Image
+        style={styles.image}
+        source={require('../assets/Profile.png')}
+      />
+      <Text style={styles.commentText1}>{comment.username}</Text>
+      <Text style={styles.commentText}>{comment.content}</Text>
+      
+    </View>
+<View style={styles.likeButton}>
+<TouchableOpacity
+      
+      onPress={() => likeComment(comment.id)}>
+      <Text style={styles.likeButtonText}>
+        {likedComments.includes(comment.id) ? 'Unlike' : 'Like'} ({comment.likedBy ? comment.likedBy.length : 0})
+      </Text>
+      
+    </TouchableOpacity>
+    <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => deleteComment(comment.id)}>
+            <Image
+                       style={{height:20,width:20}}   
+                          source={require('../assets/xoa.png')}
+                        />
+        </TouchableOpacity>
+</View>
+  
             <TouchableOpacity onPress={() => {
   if (replyingCommentId === comment.id) {
     setReplyingCommentId(null);
@@ -520,7 +542,7 @@ const styles = StyleSheet.create({
   },
   likeButton: {
     marginTop: 5,
-   
+   flexDirection:'row'
   },
   likeButtonText: {
     color: 'blue',
@@ -535,6 +557,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: -20,
   },
+  deleteButton:{
+    marginLeft:270,
+   
+  }
 });
 
 export default Detail1;

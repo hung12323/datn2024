@@ -7,17 +7,22 @@ import {
   ScrollView,
   TextInput,
   StatusBar,
+  RefreshControl,
+  Alert
 } from 'react-native';
 import firebase from '../UploadNews/firebase';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-
+import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
   const navigation = useNavigation();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [image1Color, setImage1Color] = useState('gray');
   const [image3Color, setImage3Color] = useState('gray');
+  const [refreshing, setRefreshing] = useState(false);
+  const newsRef = firebase.database().ref('news');
+  const Tab = createMaterialBottomTabNavigator();
   useEffect(() => {
     const newsRef = firebase.database().ref('news');
     newsRef.on('value', snapshot => {
@@ -77,8 +82,8 @@ const HomePage = () => {
     const bookmarkRef = firebase.database().ref('bookmark').child(newsKey);
     bookmarkRef.set(newsData[newsKey]);
     console.log('Lưu tin tức vào trang bookmark: ', newsKey);
-    changeImageColor(3);
-
+    // changeImageColor(3);
+Alert.alert('Đã lưu vào danh mục Bookmark')
   };
   const changeImageColor = imageNumber => {
     const newColor = '#ff0000';
@@ -103,17 +108,34 @@ const HomePage = () => {
         break;
     }
   };
+
+  const onRefresh = async () => {
+    setRefreshing(true); // Bắt đầu refresh
+
+    try {
+      const snapshot = await newsRef.once('value');
+      const data = snapshot.val();
+      setNewsData(data);
+    } catch (error) {
+      console.log('Error fetching news data:', error);
+    }
+
+    setRefreshing(false); // Kết thúc refresh
+  };
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="gray" />
       {/* <Head /> */}
-      <TouchableOpacity style={styles.head}>
+      <View style={styles.head}>
         <Image
           style={styles.anh1}
           source={require('../../assets/Vector.png')}
         />
-        <Image style={styles.anh2} source={require('../../assets/5.png')} />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+          <Image style={styles.anh2} source={require('../../assets/5.png')} />
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.search}>
         <TouchableOpacity>
           <Image
@@ -179,34 +201,39 @@ const HomePage = () => {
             fontWeight: 'bold',
             marginLeft: 25,
           }}>
-          Latest
+          News
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Latest')}>
-          <Text style={{ color: 'black', marginLeft: 240, fontSize: 13 }}>
+          <Text style={{ color: 'black', marginLeft: 250, fontSize: 13 }}>
             See all
           </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.text1}>
-        <TouchableOpacity style={{ marginHorizontal: 17 }}>
+        <TouchableOpacity style={{ marginHorizontal: 20 }}>
           <Text style={{ color: 'black', fontSize: 15 }}>All</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{ marginHorizontal: 27 }}
           onPress={() => navigation.navigate('Output')}>
-          <Text style={{ color: 'black', fontSize: 15 }}>Sports</Text>
+          <Text style={{ color: 'black', fontSize: 15 }}>Sport</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={{ marginHorizontal: 27 }}>
+        <TouchableOpacity style={{ marginHorizontal: 27 }}
+         onPress={() => navigation.navigate('Politics')}>
           <Text style={{ color: 'black', fontSize: 15 }}>Politics</Text>
         </TouchableOpacity>
         <TouchableOpacity style={{ marginHorizontal: 27 }}>
-          <Text style={{ color: 'black', fontSize: 15 }}>Bussiness</Text>
+          <Text style={{ color: 'black', fontSize: 15 }}>Bussines</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+
+      <ScrollView refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
+      }
+        contentContainerStyle={styles.contentContainer}>
         {newsData && (
           <View>
-            {Object.keys(filterNews()).map(key => (
+            {Object.keys(filterNews()).reverse().map(key => (
               <TouchableOpacity
                 key={key}
                 onPress={() =>
@@ -217,6 +244,7 @@ const HomePage = () => {
                     newsData[key].time,
                     newsData[key].image1,
                   )
+
                 }>
                 <View style={styles.list}>
                   <Image
@@ -246,7 +274,7 @@ const HomePage = () => {
                       <TouchableOpacity onPress={() => handleSaveBookmark(key)}>
                         <Image
                           style={[styles.image3, { tintColor: image3Color }]}
-                          source={require('../../assets/21.png')}
+                          source={require('../../assets/211.png')}
                         />
                       </TouchableOpacity>
                     </View>

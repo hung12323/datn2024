@@ -87,7 +87,7 @@ const Profile = ({ navigation }) => {
       <View style={styles.lan}>
         <TouchableOpacity
           style={{ flexDirection: 'row' }}
-          // onPress={() => navigation.navigate('UploadNews')}
+          onPress={() => navigation.navigate('Notification')}
           >
           <Image
             style={{ height: 30, width: 30 }}

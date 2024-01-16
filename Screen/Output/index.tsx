@@ -7,6 +7,7 @@ import {
   ScrollView,
   TextInput,
   StatusBar,
+  RefreshControl
 } from 'react-native';
 import firebase from '../UploadNews/firebase';
 import React, {useEffect, useState} from 'react';
@@ -17,6 +18,8 @@ const Output = () => {
   const navigation = useNavigation();
   const [image1Color, setImage1Color] = useState('gray');
   const [image3Color, setImage3Color] = useState('gray');
+  const [refreshing, setRefreshing] = useState(false);
+  const newsRef = firebase.database().ref('news');
   useEffect(() => {
     // Lắng nghe sự thay đổi dữ liệu từ Firebase Realtime Database
     const newsRef = firebase.database().ref('news1');
@@ -65,6 +68,19 @@ const Output = () => {
         break;
     }
   };
+  const onRefresh = async () => {
+    setRefreshing(true); // Bắt đầu refresh
+
+    try {
+      const snapshot = await newsRef.once('value');
+      const data = snapshot.val();
+      setNewsData(data);
+    } catch (error) {
+      console.log('Error fetching news data:', error);
+    }
+
+    setRefreshing(false); // Kết thúc refresh
+  };
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="gray" />
@@ -81,10 +97,12 @@ const Output = () => {
           Sport
         </Text>
       </View>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
+      } contentContainerStyle={styles.contentContainer}>
         {newsData && (
           <View>
-            {Object.keys(newsData).map(key => (
+            {Object.keys(newsData).reverse().map(key => (
               <TouchableOpacity
                 key={key}
                 onPress={() =>

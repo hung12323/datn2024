@@ -125,7 +125,8 @@ const LoginScreen = ({ navigation }) => {
 
       // Sign-in the user with the credential
       return auth().signInWithCredential(googleCredential);
-    } catch (error) {
+    }
+     catch (error) {
       console.log(error);
     }
   }

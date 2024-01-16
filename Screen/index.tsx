@@ -26,6 +26,8 @@ import Output from './Output';
 import Language from './Language/Advanced';
 import Feedback from './Feedback';
 import Utilities from './Utilities';
+import Notification from './Notification';
+import Politics from './Politics';
 const Tab = createMaterialBottomTabNavigator();
 const StackScreen = () => {
   return (
@@ -126,6 +128,8 @@ export function Index() {
           <Stack.Screen name="Output" component={Output} />
           <Stack.Screen name="Feedback" component={Feedback} />
           <Stack.Screen name="Utilities" component={Utilities} />
+          <Stack.Screen name="Notification" component={Notification} />
+          <Stack.Screen name="Politics" component={Politics} />
         </Stack.Navigator>
       </NavigationContainer>
     </AppProvider>

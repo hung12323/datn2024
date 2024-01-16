@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  RefreshControl
 } from 'react-native';
 import Head from './Head';
 import firebase from './UploadNews/firebase';
@@ -16,6 +17,8 @@ const Latest = () => {
   const navigation = useNavigation();
   const [image1Color, setImage1Color] = useState('gray');
   const [image3Color, setImage3Color] = useState('gray');
+  const newsRef = firebase.database().ref('news');
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     // Lắng nghe sự thay đổi dữ liệu từ Firebase Realtime Database
     const newsRef = firebase.database().ref('news');
@@ -64,6 +67,19 @@ const Latest = () => {
         break;
     }
   };
+  const onRefresh = async () => {
+    setRefreshing(true); // Bắt đầu refresh
+
+    try {
+      const snapshot = await newsRef.once('value');
+      const data = snapshot.val();
+      setNewsData(data);
+    } catch (error) {
+      console.log('Error fetching news data:', error);
+    }
+
+    setRefreshing(false); // Kết thúc refresh
+  };
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="gray" />
@@ -76,13 +92,13 @@ const Latest = () => {
             fontWeight: 'bold',
             marginLeft: 20,
           }}>
-          Latest
+         News
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Latest')}>
           <Text
             style={{
               color: 'black',
-              marginLeft: 235,
+              marginLeft: 245,
               fontSize: 13,
             }}>
             See all
@@ -107,10 +123,12 @@ const Latest = () => {
           <Text style={{color: 'black', fontSize: 15}}>Bussiness</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView  refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
+        } contentContainerStyle={styles.contentContainer}>
         {newsData && (
           <View>
-            {Object.keys(newsData).map(key => (
+            {Object.keys(newsData).reverse().map(key => (
               <TouchableOpacity
                 key={key}
                 onPress={() =>

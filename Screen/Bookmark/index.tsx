@@ -10,15 +10,20 @@ import {
   ScrollView,
   TextInput,
   StatusBar,
+  RefreshControl
 } from 'react-native';
 const Bookmark = () => {
+  const [newsData, setNewsData] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filteredBookmarks, setFilteredBookmarks] = useState([]);
+  const newsRef = firebase.database().ref('bookmark');
+  const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
     const bookmarksRef = firebase.database().ref('bookmark');
     bookmarksRef.on('value', snapshot => {
       const data = snapshot.val();
+    
       if (data) {
         const bookmarkedNews = Object.entries(data).map(([key, value]) => ({
           key,
@@ -61,7 +66,19 @@ const Bookmark = () => {
     const bookmarksRef = firebase.database().ref('bookmark');
     bookmarksRef.child(bookmarkKey).remove();
   };
+  const onRefresh = async () => {
+    setRefreshing(true); // Bắt đầu refresh
 
+    try {
+      const snapshot = await newsRef.once('value');
+      const data = snapshot.val();
+      setNewsData(data);
+    } catch (error) {
+      console.log('Error fetching news data:', error);
+    }
+
+    setRefreshing(false); // Kết thúc refresh
+  };
   return (
 
     <View style={styles.container}>
@@ -91,11 +108,13 @@ const Bookmark = () => {
           onChangeText={text => setSearchKeyword(text)}
         />
       </View>
-      <ScrollView>
+      <ScrollView refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
+        }>
         {/* {filteredBookmarks.length > 0 ? (
           filteredBookmarks.map((bookmark, index) => ( */}
        {filteredBookmarks.length > 0 ? (
-          filteredBookmarks.map((bookmark, index) => (
+          filteredBookmarks.reverse().map((bookmark, index) => (
             <TouchableOpacity
               key={index}
               onPress={() =>
