@@ -14,6 +14,7 @@ import firebase from '../UploadNews/firebase';
 import React, { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import Notification from '../Notification';
 const HomePage = () => {
   const [newsData, setNewsData] = useState(null);
   const navigation = useNavigation();
@@ -23,6 +24,7 @@ const HomePage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const newsRef = firebase.database().ref('news');
   const Tab = createMaterialBottomTabNavigator();
+  const [visiblemodal, setVisiblemodal] = useState(false);
   useEffect(() => {
     const newsRef = firebase.database().ref('news');
     newsRef.on('value', snapshot => {
@@ -37,7 +39,7 @@ const HomePage = () => {
   }, []);
   const navigateToDetail = (title, content, image, time, image1) => {
     // Chuyển đến màn hình chi tiết và truyền dữ liệu tin tức
-    navigation.navigate('Detail1', { title, content, image });
+    navigation.navigate('Detail1', { title, content, image,time,image1 });
   };
   const filterNews = () => {
     if (!searchKeyword) {
@@ -78,7 +80,7 @@ const HomePage = () => {
     });
   };
   const handleSaveBookmark = (newsKey) => {
-    // Thực hiện lưu tin tức vào trang bookmark
+   
     const bookmarkRef = firebase.database().ref('bookmark').child(newsKey);
     bookmarkRef.set(newsData[newsKey]);
     console.log('Lưu tin tức vào trang bookmark: ', newsKey);
@@ -131,9 +133,13 @@ Alert.alert('Đã lưu vào danh mục Bookmark')
           style={styles.anh1}
           source={require('../../assets/Vector.png')}
         />
-        <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+        <TouchableOpacity   onPress={() => setVisiblemodal(true)}>
           <Image style={styles.anh2} source={require('../../assets/5.png')} />
         </TouchableOpacity>
+        <Notification
+          visible={visiblemodal}
+          onRequestClose={() => setVisiblemodal(false)}
+        />
       </View>
 
       <View style={styles.search}>
@@ -271,12 +277,12 @@ Alert.alert('Đã lưu vào danh mục Bookmark')
                       <Text style={styles.description1}>
                         {newsData[key].time}
                       </Text>
-                      <TouchableOpacity onPress={() => handleSaveBookmark(key)}>
+                      {/* <TouchableOpacity onPress={() => handleSaveBookmark(key)}>
                         <Image
                           style={[styles.image3, { tintColor: image3Color }]}
                           source={require('../../assets/211.png')}
                         />
-                      </TouchableOpacity>
+                      </TouchableOpacity> */}
                     </View>
                   </View>
                 </View>

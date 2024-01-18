@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 // import {Text} from 'react-native-elements';
 import ImageCropPicker from 'react-native-image-crop-picker';
+import Notification from '../Notification';
 const Profile = ({ navigation }) => {
   const [profileImage, setProfileImage] = useState(null);
-
+  const [visiblemodal, setVisiblemodal] = useState(false);
   const selectProfileImage = () => {
     ImageCropPicker.openPicker({
       width: 300,
@@ -87,7 +88,7 @@ const Profile = ({ navigation }) => {
       <View style={styles.lan}>
         <TouchableOpacity
           style={{ flexDirection: 'row' }}
-          onPress={() => navigation.navigate('Notification')}
+          onPress={() => setVisiblemodal(true)}
           >
           <Image
             style={{ height: 30, width: 30 }}
@@ -95,6 +96,10 @@ const Profile = ({ navigation }) => {
           />
           <Text style={styles.text1}>Notification</Text>
         </TouchableOpacity>
+        <Notification
+          visible={visiblemodal}
+          onRequestClose={() => setVisiblemodal(false)}
+        />
       </View>
 
       <View style={styles.lan}>

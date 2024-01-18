@@ -1,53 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-const Footer = () => {
+
+const Footer = (props) => {
   const navigation = useNavigation();
   const [image1Color, setImage1Color] = useState('gray');
-  // const [image2Color, setImage2Color] = useState('gray');
-  const [image3Color, setImage3Color] = useState('gray');
-
-  const changeImageColor = imageNumber => {
-    const newColor = '#ff0000';
-    const newColor1 = '#1877F2';
-
-    switch (imageNumber) {
-      case 1:
-        if (image1Color === newColor) {
-          setImage1Color('gray');
-        } else {
-          setImage1Color(newColor);
-        }
-        break;
-      case 3:
-        if (image3Color === newColor1) {
-          setImage3Color('gray');
-        } else {
-          setImage3Color(newColor1);
-        }
-        break;
-      default:
-        break;
-    }
-  };
+  const { image3Color, onpress, imageSource } = props;
 
   return (
     <View style={styles.image}>
-      <TouchableOpacity
-        onPress={() => changeImageColor(1)}
-        style={styles.container1}>
-        <Image
-          style={[styles.image1, { tintColor: image1Color }]}
-          source={require('../assets/19.png')}
-        />
+      <TouchableOpacity style={styles.container1}>
+        <Image style={[styles.image1, { tintColor: image1Color }]} source={require('../assets/19.png')} />
         <Text style={styles.text}>23.5K</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => changeImageColor(3)}>
 
-        <Image
-          style={[styles.image3, {tintColor: image3Color}]}
-        source={require('../assets/21.png')}
-        />
+      {/* Các phần giao diện khác */}
+      <TouchableOpacity onPress={onpress}>
+        <Image style={[styles.image3, { tintColor: image3Color }]} source={imageSource} />
       </TouchableOpacity>
     </View>
   );
@@ -77,7 +46,7 @@ const styles = StyleSheet.create({
   },
   image3: {
     marginRight: 8,
-    marginLeft:240
+    marginLeft: 250,
   },
   text: {
     fontWeight: 'bold',

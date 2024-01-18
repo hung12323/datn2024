@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState } from 'react';
 import {
   Image,
   View,
@@ -6,10 +6,10 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import ImageCropPicker from 'react-native-image-crop-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import firebase from './UploadNews/firebase'; // Import Firebase
 
 const EditProfile = () => {
   const navigation = useNavigation();
@@ -22,72 +22,25 @@ const EditProfile = () => {
   const [website, setWebsite] = useState('');
 
   const selectProfileImage = () => {
-    ImageCropPicker.openPicker({
-      width: 300,
-      height: 300,
-      cropping: true,
-    })
-      .then(async image => {
-        setProfileImage(image.path);
-        try {
-          await AsyncStorage.setItem('profileImage', image.path);
-          console.log('Profile image saved successfully');
-        } catch (error) {
-          console.log('Error saving profile image:', error);
-        }
-      })
-      .catch(error => {
-        console.log('Error selecting profile image:', error);
-      });
+    // Các phần xử lý liên quan đến chọn hình ảnh
   };
 
   const saveProfileData = async () => {
     try {
-      await AsyncStorage.setItem('username', username);
-      await AsyncStorage.setItem('fullName', fullName);
-      await AsyncStorage.setItem('email', email);
-      await AsyncStorage.setItem('phoneNumber', phoneNumber);
-      await AsyncStorage.setItem('bio', bio);
-      await AsyncStorage.setItem('website', website);
+      // Lưu dữ liệu lên Firebase Realtime Database
+      await firebase.database().ref('edprofile').set({
+        username,
+        fullName,
+        email,
+        phoneNumber,
+        bio,
+        website,
+      });
+
       console.log('Profile data saved successfully');
+      Alert.alert('Sửa thông tin thành công')
     } catch (error) {
       console.log('Error saving profile data:', error);
-    }
-  };
-
-  const restoreProfileData = async () => {
-    try {
-      const savedProfileImage = await AsyncStorage.getItem('profileImage');
-      const savedUsername = await AsyncStorage.getItem('username');
-      const savedFullName = await AsyncStorage.getItem('fullName');
-      const savedEmail = await AsyncStorage.getItem('email');
-      const savedPhoneNumber = await AsyncStorage.getItem('phoneNumber');
-      const savedBio = await AsyncStorage.getItem('bio');
-      const savedWebsite = await AsyncStorage.getItem('website');
-
-      if (savedProfileImage !== null) {
-        setProfileImage(savedProfileImage);
-      }
-      if (savedUsername !== null) {
-        setUsername(savedUsername);
-      }
-      if (savedFullName !== null) {
-        setFullName(savedFullName);
-      }
-      if (savedEmail !== null) {
-        setEmail(savedEmail);
-      }
-      if (savedPhoneNumber !== null) {
-        setPhoneNumber(savedPhoneNumber);
-      }
-      if (savedBio !== null) {
-        setBio(savedBio);
-      }
-      if (savedWebsite !== null) {
-        setWebsite(savedWebsite);
-      }
-    } catch (error) {
-      console.log('Error restoring profile data:', error);
     }
   };
 
@@ -95,17 +48,13 @@ const EditProfile = () => {
     saveProfileData();
   };
 
-  useEffect(() => {
-    restoreProfileData();
-  }, []);
-
   return (
     <View style={styles.container}>
       <View style={styles.title}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image style={styles.image} source={require('../assets/22.png')} />
         </TouchableOpacity>
-        <Text style={{fontSize: 20, color: 'black'}}>Edit Profile</Text>
+        <Text style={{ fontSize: 20, color: 'black' }}>Edit Profile</Text>
         <TouchableOpacity onPress={onSaveProfile}>
           <Image style={styles.image} source={require('../assets/23.png')} />
         </TouchableOpacity>
@@ -117,7 +66,7 @@ const EditProfile = () => {
         />
       </TouchableOpacity>
       {profileImage && (
-        <Image source={{uri: profileImage}} style={styles.profileImage} />
+        <Image source={{ uri: profileImage }} style={styles.profileImage} />
       )}
       <Text style={styles.label}>Username</Text>
       <TextInput

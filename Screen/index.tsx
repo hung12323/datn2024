@@ -28,6 +28,7 @@ import Feedback from './Feedback';
 import Utilities from './Utilities';
 import Notification from './Notification';
 import Politics from './Politics';
+
 const Tab = createMaterialBottomTabNavigator();
 const StackScreen = () => {
   return (

@@ -15,6 +15,7 @@ import auth from '@react-native-firebase/auth';
 import CheckBox from '@react-native-community/checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { AppContext } from '../AppContext';
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [pass, setPass] = useState('');
@@ -25,12 +26,14 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const {emailname,setEmailname} = useContext(AppContext)
   const LogninFn = () => {
     auth()
       .signInWithEmailAndPassword(email, password)
       .then(() => {
         Alert.alert('Đăng nhập thành công ');
         navigation.navigate('About');
+        setEmailname(email)
       })
       .catch(err => {
         console.log(err);

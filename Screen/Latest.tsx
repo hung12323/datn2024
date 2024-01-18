@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import Head from './Head';
 import firebase from './UploadNews/firebase';
-import React, {useEffect, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 const Latest = () => {
   const [newsData, setNewsData] = useState(null);
   const navigation = useNavigation();
@@ -20,7 +20,6 @@ const Latest = () => {
   const newsRef = firebase.database().ref('news');
   const [refreshing, setRefreshing] = useState(false);
   useEffect(() => {
-    // Lắng nghe sự thay đổi dữ liệu từ Firebase Realtime Database
     const newsRef = firebase.database().ref('news');
     newsRef.on('value', snapshot => {
       const data = snapshot.val();
@@ -34,39 +33,9 @@ const Latest = () => {
   }, []);
   const navigateToDetail = (title, content, image, time, image1) => {
     // Chuyển đến màn hình chi tiết và truyền dữ liệu tin tức
-    navigation.navigate('Detail1', {title, content, image});
+    navigation.navigate('Detail1', { title, content, image, time, image1 });
   };
-  const handleSaveBookmark = (newsKey) => {
-    // Thực hiện lưu tin tức vào trang bookmark
-    const bookmarkRef = firebase.database().ref('bookmark').child(newsKey);
-    bookmarkRef.set(newsData[newsKey]);
-    console.log('Lưu tin tức vào trang bookmark: ', newsKey);
-    changeImageColor(3);
-
-  };
-  const changeImageColor = imageNumber => {
-    const newColor = '#ff0000';
-    const newColor1 = '#1877F2';
-
-    switch (imageNumber) {
-      case 1:
-        if (image1Color === newColor) {
-          setImage1Color('gray');
-        } else {
-          setImage1Color(newColor);
-        }
-        break;
-      case 3:
-        if (image3Color === newColor1) {
-          setImage3Color('gray');
-        } else {
-          setImage3Color(newColor1);
-        }
-        break;
-      default:
-        break;
-    }
-  };
+ 
   const onRefresh = async () => {
     setRefreshing(true); // Bắt đầu refresh
 
@@ -92,7 +61,7 @@ const Latest = () => {
             fontWeight: 'bold',
             marginLeft: 20,
           }}>
-         News
+          News
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Latest')}>
           <Text
@@ -106,26 +75,26 @@ const Latest = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.text1}>
-        <TouchableOpacity style={{marginHorizontal: 17}}>
-          <Text style={{color: 'black', fontSize: 15, marginLeft: 5}}>All</Text>
+        <TouchableOpacity style={{ marginHorizontal: 17 }}>
+          <Text style={{ color: 'black', fontSize: 15, marginLeft: 5 }}>All</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={{marginHorizontal: 27}}>
+        <TouchableOpacity style={{ marginHorizontal: 27 }}>
           <Text
-            style={{color: 'black', fontSize: 15}}
+            style={{ color: 'black', fontSize: 15 }}
             onPress={() => navigation.navigate('Output')}>
             Sports
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={{marginHorizontal: 27}}>
-          <Text style={{color: 'black', fontSize: 15}}>Politics</Text>
+        <TouchableOpacity style={{ marginHorizontal: 27 }}>
+          <Text style={{ color: 'black', fontSize: 15 }}>Politics</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={{marginHorizontal: 27}}>
-          <Text style={{color: 'black', fontSize: 15}}>Bussiness</Text>
+        <TouchableOpacity style={{ marginHorizontal: 27 }}>
+          <Text style={{ color: 'black', fontSize: 15 }}>Bussiness</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView  refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
-        } contentContainerStyle={styles.contentContainer}>
+      <ScrollView refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Sử dụng RefreshControl để kích hoạt chức năng refresh
+      } contentContainerStyle={styles.contentContainer}>
         {newsData && (
           <View>
             {Object.keys(newsData).reverse().map(key => (
@@ -139,10 +108,11 @@ const Latest = () => {
                     newsData[key].time,
                     newsData[key].image1,
                   )
+
                 }>
                 <View style={styles.list}>
                   <Image
-                    source={{uri: newsData[key].image}}
+                    source={{ uri: newsData[key].image }}
                     style={styles.image}
                   />
                   <View style={styles.rightItem}>
@@ -159,18 +129,13 @@ const Latest = () => {
                         marginBottom: -40,
                       }}>
                       <Image
-                        source={{uri: newsData[key].image1}}
-                        style={{height: 20, width: 80, marginTop: -5}}
+                        source={{ uri: newsData[key].image1 }}
+                        style={{ height: 20, width: 80, marginTop: -5 }}
                       />
                       <Text style={styles.description1}>
                         {newsData[key].time}
                       </Text>
-                      <TouchableOpacity onPress={() => handleSaveBookmark(key)}>
-                        <Image
-                          style={[styles.image3, { tintColor: image3Color }]}
-                          source={require('../assets/21.png')}
-                        />
-                      </TouchableOpacity>
+                    
                     </View>
                   </View>
                 </View>

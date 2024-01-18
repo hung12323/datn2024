@@ -21,8 +21,7 @@ import {
     const [refreshing, setRefreshing] = useState(false);
     const newsRef = firebase.database().ref('news');
     useEffect(() => {
-      // Lắng nghe sự thay đổi dữ liệu từ Firebase Realtime Database
-      const newsRef = firebase.database().ref('news3');
+      const newsRef = firebase.database().ref('news');
       newsRef.on('value', snapshot => {
         const data = snapshot.val();
         setNewsData(data);
@@ -35,7 +34,7 @@ import {
     }, []);
     const navigateToDetail = (title, content, image, time, image1) => {
       // Chuyển đến màn hình chi tiết và truyền dữ liệu tin tức
-      navigation.navigate('Detail1', {title, content, image});
+      navigation.navigate('Detail1', { title, content, image,time,image1 });
     };
     const handleSaveBookmark = (newsKey) => {
       // Thực hiện lưu tin tức vào trang bookmark
@@ -102,16 +101,17 @@ import {
             <View>
               {Object.keys(newsData).reverse().map(key => (
                 <TouchableOpacity
-                  key={key}
-                  onPress={() =>
-                    navigateToDetail(
-                      newsData[key].title,
-                      newsData[key].content,
-                      newsData[key].image,
-                      newsData[key].image1,
-                      newsData[key].time,
-                    )
-                  }>
+                key={key}
+                onPress={() =>
+                  navigateToDetail(
+                    newsData[key].title,
+                    newsData[key].content,
+                    newsData[key].image,
+                    newsData[key].time,
+                    newsData[key].image1,
+                  )
+   
+                }>
                   <View>
                     <Image
                       source={{uri: newsData[key].image}}
@@ -128,12 +128,7 @@ import {
                         style={{height: 20, width: 80, marginTop: -2,marginRight:10}}
                       />
                       <Text>{newsData[key].time}</Text>
-                      <TouchableOpacity onPress={() => handleSaveBookmark(key)}>
-                          <Image
-                            style={[styles.image3, { tintColor: image3Color }]}
-                            source={require('../../assets/21.png')}
-                          />
-                        </TouchableOpacity>
+                    
                     </View>
                     <View style={styles.rightItem}>
                       <Text style={styles.title} numberOfLines={2}>

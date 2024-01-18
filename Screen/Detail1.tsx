@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Button
+  Button,
+  Alert
 } from 'react-native';
 import database from '@react-native-firebase/database';
 import moment from 'moment';
@@ -15,31 +16,35 @@ import Head from './Head';
 import Footer from './Footer';
 import { useNavigation } from '@react-navigation/native';
 import firebase from './UploadNews/firebase';
-
+import { AppContext } from './AppContext';
 const Detail1 = ({ route }) => {
   const [newsData, setNewsData] = useState(null);
-  const { title, content, image, timestamp } = route.params;
+  const { title, content, image, timestamp, time, image1 } = route.params;
   const [comment, setComment] = useState('');
   const [username, setUsername] = useState('');
   const [comments, setComments] = useState([]);
   const [likedComments, setLikedComments] = useState([]);
   const navigation = useNavigation();
   const [searchKeyword] = useState('');
-
+  const { emailname } = useContext(AppContext)
+  
   const submitComment = () => {
     // Gửi bình luận lên Realtime Database
     database()
       .ref('comments')
       .push()
       .set({
+        email: emailname,
         title: title,
         content: comment,
         username: username,
         likes: 0,
+        time: time,
         likedBy: [],
       })
       .then(() => {
         console.log('Bình luận đã được lưu thành công vào Firebase.');
+        Alert.alert('Bình luận thành công')
         setComment('');
         setUsername('');
       })
@@ -47,7 +52,7 @@ const Detail1 = ({ route }) => {
         console.log('Lỗi khi lưu bình luận vào Firebase:', error);
       });
   };
-
+ 
   useEffect(() => {
     const commentsRef = database().ref('comments');
     commentsRef.on('value', snapshot => {
@@ -134,39 +139,94 @@ const Detail1 = ({ route }) => {
     }, {});
   };
   const [reply, setReply] = useState('');
-const [replyingCommentId, setReplyingCommentId] = useState(null);
-const [replyingUsername, setReplyingUsername] = useState('');
+  const [replyingCommentId, setReplyingCommentId] = useState(null);
+  const [replyingUsername, setReplyingUsername] = useState('');
 
-const submitReply = (commentId, reply, username) => {
-  database()
-    .ref(`comments/${commentId}/replies`)
-    .push()
-    .set({
-      content: reply,
-      username: username,
-    })
-    .then(() => {
-      console.log('Reply saved successfully to Firebase.');
-      setReply('');
-      setReplyingCommentId(null); // Thêm dòng này để ẩn các comment reply
-      setReplyingUsername('');
-    })
-    .catch(error => {
-      console.log('Error saving reply to Firebase:', error);
-    });
-};
-const deleteComment = (commentId) => {
-  // Xóa comment khỏi Realtime Database
-  database()
-    .ref(`comments/${commentId}`)
-    .remove()
-    .then(() => {
-      console.log('Xóa comment thành công.');
-    })
-    .catch(error => {
-      console.log('Lỗi khi xóa comment:', error);
-    });
-};
+  const submitReply = (commentId, reply, username, emailname) => {
+    database()
+      .ref(`comments/${commentId}/replies`)
+      .push()
+      .set({
+        email: emailname,
+        content: reply,
+        username: username,
+      })
+      .then(() => {
+        console.log('Reply saved successfully to Firebase.');
+        setReply('');
+        setReplyingCommentId(null); // Thêm dòng này để ẩn các comment reply
+        setReplyingUsername('');
+      })
+      .catch(error => {
+        console.log('Error saving reply to Firebase:', error);
+      });
+  };
+  const deleteComment = (commentId) => {
+    // Xóa comment khỏi Realtime Database
+    database()
+      .ref(`comments/${commentId}`)
+      .remove()
+      .then(() => {
+        console.log('Xóa comment thành công.');
+      })
+      .catch(error => {
+        console.log('Lỗi khi xóa comment:', error);
+      });
+  };
+
+
+  const [image3Color, setImage3Color] = useState('#3c64a8');
+  const [img, setImg] = useState(require('../assets/13.png'));
+  // const imageSource = require('../assets/13.png');
+  const imageSource = img;
+
+  const handleSaveBookmark = () => {
+    const bookmarksRef = firebase.database().ref('bookmark');
+
+    bookmarksRef
+      .orderByChild('title')
+      .equalTo(title)
+      .once('value')
+      .then(snapshot => {
+        let exists = false;
+
+        snapshot.forEach(childSnapshot => {
+          const bookmark = childSnapshot.val();
+          if (bookmark.email === emailname) {
+            exists = true;
+            return;
+          }
+        });
+
+        if (exists) {
+          Alert.alert('Tin tức đã có trong bookmark.');
+          setImg(require('../assets/21.png'));
+        } else {
+          bookmarksRef
+            .push()
+            .set({
+              email: emailname,
+              title: title,
+              content: content,
+              image: image,
+              image1: image1,
+              time: time
+            })
+            .then(() => {
+              console.log('Tin tức đã lưu thành công vào Firebase.');
+              Alert.alert('Thêm vào bookmark.');
+              setImg(require('../assets/21.png'));
+              // Đổi màu nút thành xanh
+            })
+            .catch(error => {
+              console.log('Lỗi khi lưu tin tức vào Firebase:', error);
+            });
+        }
+      })
+      .catch(error => {
+        console.log('Lỗi khi truy vấn vào Firebase:', error);
+      });
+  };
   return (
     <View style={styles.container}>
       <View style={{ flexDirection: 'row' }}>
@@ -217,95 +277,97 @@ const deleteComment = (commentId) => {
           </Text>
         </View>
         {comments.map((comment, index) => (
-  <View key={index} style={styles.commentContainer}>
-    <View style={{ flexDirection: 'row' }}>
-      <Image
-        style={styles.image}
-        source={require('../assets/Profile.png')}
-      />
-      <Text style={styles.commentText1}>{comment.username}</Text>
-      <Text style={styles.commentText}>{comment.content}</Text>
-      
-    </View>
-<View style={styles.likeButton}>
-<TouchableOpacity
-      
-      onPress={() => likeComment(comment.id)}>
-      <Text style={styles.likeButtonText}>
-        {likedComments.includes(comment.id) ? 'Unlike' : 'Like'} ({comment.likedBy ? comment.likedBy.length : 0})
-      </Text>
-      
-    </TouchableOpacity>
-    <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => deleteComment(comment.id)}>
-            <Image
-                       style={{height:20,width:20}}   
-                          source={require('../assets/xoa.png')}
-                        />
-        </TouchableOpacity>
-</View>
-  
-            <TouchableOpacity onPress={() => {
-  if (replyingCommentId === comment.id) {
-    setReplyingCommentId(null);
-  } else {
-    setReplyingCommentId(comment.id);
-  }
-}}>
-  <Text>Reply</Text>
-</TouchableOpacity>
+          <View key={index} style={styles.commentContainer}>
+            <View style={{ flexDirection: 'row' }}>
+              <Image
+                style={styles.image}
+                source={require('../assets/Profile.png')}
+              />
+              <Text style={styles.commentText1}>{comment.email}</Text>
 
-{/* Hiển thị danh sách các comment reply */}
-{comment.replies && Object.values(comment.replies).map((reply, index) => (
-  <View style={{flexDirection:'row',marginTop: 10,marginLeft:20}} key={index}>
-    {replyingCommentId === comment.id ? (
-      <>
-        <Image
-          style={styles.image}
-          source={require('../assets/24.png')}
-        />
-        <Text style={styles.commentText1}>{reply.username}</Text>
-      </>
-    ) : null}
-    {replyingCommentId === comment.id && (
-      <Text style={styles.commentText}>{reply.content}</Text>
-    )}
-  </View>
-))}
 
-{
-  replyingCommentId === comment.id && (
-    <View>
-      <TextInput
-        style={styles.commentInput}
-        value={replyingUsername}
-        onChangeText={setReplyingUsername}
-        placeholder="Your name"
-      />
-      <TextInput
-        style={styles.commentInput}
-        value={reply}
-        onChangeText={setReply}
-        placeholder="Enter your reply"
-      />
-      <TouchableOpacity style={styles.submitButton} onPress={() => {
-        submitReply(comment.id, reply, replyingUsername);
-        setReplyingCommentId(null);
-      }}>
-        <Text>Submit Reply</Text>
-      </TouchableOpacity>
-    </View>
-  )
-}
+            </View>
+            <Text style={styles.commentTime}>{moment(comment.time).format('DD-MM-YYY')}</Text>
+            <Text style={styles.commentText}>{comment.content}</Text>
+            <View style={styles.likeButton}>
+              <TouchableOpacity
+
+                onPress={() => likeComment(comment.id)}>
+                <Text style={styles.likeButtonText}>
+                  {likedComments.includes(comment.id) ? 'Unlike' : 'Like'} ({comment.likedBy ? comment.likedBy.length : 0})
+                </Text>
+
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {
+                if (replyingCommentId === comment.id) {
+                  setReplyingCommentId(null);
+                } else {
+                  setReplyingCommentId(comment.id);
+                }
+              }}>
+                <Text style={{ marginLeft: 30 }}>Reply</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => deleteComment(comment.id)}>
+                <Image
+                  style={{ height: 20, width: 20 }}
+                  source={require('../assets/xoa.png')}
+                />
+              </TouchableOpacity>
+
+            </View>
+
+
+
+            {/* Hiển thị danh sách các comment reply */}
+            {comment.replies && Object.values(comment.replies).map((reply, index) => (
+              <View style={{ marginTop: 10, marginLeft: 20 }} key={index}>
+                {replyingCommentId === comment.id ? (
+                  <>
+                    <Image
+                      style={styles.image}
+                      source={require('../assets/24.png')}
+                    />
+                    <Text style={styles.commentText1}>{reply.email}</Text>
+                    <Text style={styles.commentTime1}>{moment(comment.time).format('DD-MM-YYY')}</Text>
+                  </>
+                ) : null}
+                {replyingCommentId === comment.id && (
+                  <Text style={styles.commentText}>{reply.content}</Text>
+
+                )}
+
+              </View>
+            ))}
+
+            {
+              replyingCommentId === comment.id && (
+                <View>
+
+                  <TextInput
+                    style={styles.commentInput}
+                    value={reply}
+                    onChangeText={setReply}
+                    placeholder="Enter your reply"
+                  />
+                  <TouchableOpacity style={styles.submitButton} onPress={() => {
+                    submitReply(comment.id, reply, replyingUsername, emailname);
+                    setReplyingCommentId(null);
+                  }}>
+                    <Text>Submit Reply</Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            }
           </View>
         ))}
-        <TextInput
+        {/* <TextInput
           style={styles.commentInput}
           placeholder="Your name"
           value={username}
           onChangeText={text => setUsername(text)}
-        />
+        /> */}
         <TextInput
           style={styles.commentInput}
           placeholder="Enter your comment"
@@ -448,7 +510,7 @@ const deleteComment = (commentId) => {
         </View>
       </ScrollView>
       <View style={{ marginLeft: 20 }}>
-        <Footer />
+        <Footer image3Color={image3Color} onpress={handleSaveBookmark} imageSource={imageSource} />
       </View>
     </View>
   );
@@ -541,11 +603,12 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   likeButton: {
-    marginTop: 5,
-   flexDirection:'row'
+    marginTop: 2,
+    flexDirection: 'row'
   },
   likeButtonText: {
     color: 'blue',
+    marginLeft: 4,
   },
   image: {
     height: 25,
@@ -557,9 +620,15 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: -20,
   },
-  deleteButton:{
-    marginLeft:270,
-   
+  commentTime: {
+    marginLeft: 35
+  },
+  commentTime1: {
+    marginLeft: 5
+  },
+  deleteButton: {
+    marginLeft: 200,
+    marginBottom: 20,
   }
 });
 

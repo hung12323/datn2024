@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState ,useContext} from 'react';
 import firebase from '../UploadNews/firebase';
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -12,6 +12,7 @@ import {
   StatusBar,
   RefreshControl
 } from 'react-native';
+import { AppContext } from '../AppContext';
 const Bookmark = () => {
   const [newsData, setNewsData] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
@@ -19,24 +20,48 @@ const Bookmark = () => {
   const [filteredBookmarks, setFilteredBookmarks] = useState([]);
   const newsRef = firebase.database().ref('bookmark');
   const [refreshing, setRefreshing] = useState(false);
+  const {emailname}=useContext(AppContext)
   useEffect(() => {
-    const bookmarksRef = firebase.database().ref('bookmark');
-    bookmarksRef.on('value', snapshot => {
-      const data = snapshot.val();
+    // const bookmarksRef = firebase.database().ref('bookmark');
+    // bookmarksRef.on('value', snapshot => {
+    //   const data = snapshot.val();
     
-      if (data) {
-        const bookmarkedNews = Object.entries(data).map(([key, value]) => ({
-          key,
-          ...value,
-        }));
-        setBookmarks(bookmarkedNews);
-      } else {
-        setBookmarks([]);
-      }
-    });
+    //   if (data) {
+    //     const bookmarkedNews = Object.entries(data).map(([key, value]) => ({
+    //       key,
+    //       ...value,
+    //     }));
+    //     setBookmarks(bookmarkedNews);
+    //   } else {
+    //     setBookmarks([]);
+    //   }
+    // });
 
-    // Clean up: Hủy lắng nghe khi component bị unmount
+    // // Clean up: Hủy lắng nghe khi component bị unmount
+    // return () => {
+    //   bookmarksRef.off();
+    // };
+    const fetchData = () => {
+      const bookmarksRef = firebase.database().ref('bookmark');
+      bookmarksRef
+        .orderByChild('email')
+        .equalTo(emailname)
+        .on('value', snapshot => {
+          const items = [];
+          snapshot.forEach(childSnapshot => {
+            const item = childSnapshot.val();
+            item.key = childSnapshot.key;
+            items.push(item);
+          });
+          setBookmarks(items);
+        });
+    };
+
+    fetchData();
+
+    // Clean up the listener when component unmounts
     return () => {
+      const bookmarksRef = firebase.database().ref('bookmark');
       bookmarksRef.off();
     };
   }, []);
